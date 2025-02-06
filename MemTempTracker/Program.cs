@@ -16,7 +16,7 @@ namespace MemTempTracker
         static char delimiter = ',';
         static int tempThreshold = 100;
 
-
+        // Parse Log and return temperature value
         static double? GetLastestMemoryTemperature() 
         {
             if (!File.Exists(logFilePath)) {
@@ -59,6 +59,22 @@ namespace MemTempTracker
             return null;
         }
 
+        // Terminate Salad program
+        static void KillProcess(string processName) 
+        {
+            var processes = Process.GetProcessesByName(processName);
+            foreach (var process in processes)
+            {
+                try {
+                    process.Kill();
+                    Console.WriteLine($"{processName} has been terminated.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to terminate {processName}: {ex.Message}");
+                }
+            }
+        }
 
         static void Main(string[] args)
         {
@@ -68,6 +84,21 @@ namespace MemTempTracker
                 try
                 {
                     double? latestTemp = GetLastestMemoryTemperature();
+
+                    if (latestTemp.HasValue) 
+                    {
+                        Console.WriteLine($"Latest Memory Temperature: {latestTemp}°C");
+
+                        if (latestTemp >= tempThreshold) 
+                        {
+                            Console.WriteLine($"Temperature exceeded {tempThreshold}°C! Terminating {targetProcess}");
+                            KillProcess(targetProcess);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("No valid temperature reading found.");
+                    }
                 }
                 catch (Exception ex) {
                     Console.WriteLine($"Error: {ex.Message}");
