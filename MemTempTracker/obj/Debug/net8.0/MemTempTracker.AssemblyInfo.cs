@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MemTempTracker")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6050618b125f60882bf81af6555d9c6ed9b7e555")]
 [assembly: System.Reflection.AssemblyProductAttribute("MemTempTracker")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MemTempTracker")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
