@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Threading;
+using System.Text.Json;
 
 namespace MemTempTracker
 {
@@ -102,7 +103,7 @@ namespace MemTempTracker
 
         static void Main(string[] args)
         {
-            Console.WriteLine("Monitoring GPU-Z logs for VRAM temperature...");
+            Console.Write("Monitoring GPU-Z logs for VRAM temperature...\n");
 
             while (true)
             {
@@ -110,9 +111,31 @@ namespace MemTempTracker
                 {
                     double? latestTemp = GetLastestMemoryTemperature();
 
+
                     if (latestTemp.HasValue) 
                     {
-                        Console.WriteLine($"Latest Memory Temperature: {latestTemp}°C");
+                        // Reset cursor to start of the line
+                        Console.Write("\rTemperature Reading: ");
+
+                        // Colour format for text printed after this line
+                        if (latestTemp < 80)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Green;
+                        }
+                        else if (latestTemp > 80 && latestTemp < 100)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                        }
+                        else 
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                        }
+
+                        Console.Write($"{latestTemp}°C ");
+
+                        // Reset console color to default
+                        // Stops from applying the colour to any new text print after this point
+                        Console.ResetColor();
 
                         if (latestTemp >= tempThreshold) 
                         {
