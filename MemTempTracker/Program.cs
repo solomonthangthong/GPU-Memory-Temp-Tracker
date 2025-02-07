@@ -19,37 +19,60 @@ namespace MemTempTracker
         // Parse Log and return temperature value
         static double? GetLastestMemoryTemperature() 
         {
-            if (!File.Exists(logFilePath)) {
+            if (!File.Exists(logFilePath))
+            {
                 Console.WriteLine("GPU-Z log file not found.");
                 return null;
             }
 
-            try {
-                // Latest reading is at the bottom, so read from reverse
-                var lines = File.ReadLines(logFilePath).Reverse().ToList();
-                if (lines.Count < 2) return null;
-
-                //Retrieve first line in the file, split by comma, h => h remove extra spaces, and return into Array
-                // Date, GPU Clock [MHz], Memory Temperature [°C], Fan Speed [%] to ["Date", "GPU Clock [MHz]", "Memory Temperature [°C]", "Fan Speed [%]"]
-                var header = lines.Last().Split(',').Select(h => h.Trim()).ToArray();
-
-                // Get last line in file, split into array by comma, remove extra spaces
-                // 2025-02-06 18:04:10, 210.0, 36.0, 20 to ["2025-02-06 18:04:10", "210.0", "36.0", "20"]
-                var latestData = lines.First().Split(',').Select(d => d.Trim()).ToArray(); // Latest entry
-
-                int memoryTempIndex = Array.FindIndex(header, col => col.Equals("Memory Temperature [°C]", StringComparison.OrdinalIgnoreCase));
-
-                if (memoryTempIndex == -1) 
+            try
+            {
+                // Open the file with shared access for read and write 
+                using (FileStream fileStream = new FileStream(logFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (StreamReader reader = new StreamReader(fileStream))
                 {
-                    Console.WriteLine("Memory Temperature Column not found");
-                    return null;
+                    // Latest reading is at the bottom, so read from reverse
+                    var lines = reader.ReadToEnd()
+                              .Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries) // Remove empty lines
+                              .Reverse()
+                              .ToList();
+
+                    if (lines.Count < 2)
+                    {
+                        Console.WriteLine("Not enough lines in the log file.");
+                        return null;
+                    }
+
+                    //Retrieve first line in the file, split by comma, h => h remove extra spaces, and return into Array
+                    // Date, GPU Clock [MHz], Memory Temperature [°C], Fan Speed [%] to ["Date", "GPU Clock [MHz]", "Memory Temperature [°C]", "Fan Speed [%]"]
+                    var header = lines.Last().Split(',').Select(h => h.Trim()).ToArray();
+
+                    // Get last line in file, split into array by comma, remove extra spaces
+                    // 2025-02-06 18:04:10, 210.0, 36.0, 20 to ["2025-02-06 18:04:10", "210.0", "36.0", "20"]
+                    var latestData = lines.First().Split(',').Select(d => d.Trim()).ToArray(); // Latest entry
+
+                    // Ensure header and latestData have the same number of columns
+                    if (latestData.Length < header.Length)
+                    {
+                        Console.WriteLine($"Mismatch: Header has {header.Length} columns, but latestData has {latestData.Length} columns.");
+                        return null;
+                    }
+
+                    int memoryTempIndex = Array.FindIndex(header, col => col.Contains("Memory Temperature", StringComparison.OrdinalIgnoreCase));
+
+                    if (memoryTempIndex == -1 || memoryTempIndex >= latestData.Length)
+                    {
+                        Console.WriteLine("Memory Temperature column NOT found or index is out of range.");
+                        return null;
+                    }
+                   
+                    // out double temp store the parsed number when TryParse successfully converts string into double
+                    if (double.TryParse(latestData[memoryTempIndex], out double temp))
+                    {
+                        return temp;
+                    }
                 }
 
-                // out double temp store the parsed number when TryParse successfully converts string into double
-                if (double.TryParse(latestData[memoryTempIndex], out double temp)) 
-                { 
-                    return temp; 
-                } 
             }
             catch (Exception ex)
             {
@@ -76,11 +99,13 @@ namespace MemTempTracker
             }
         }
 
+
         static void Main(string[] args)
         {
             Console.WriteLine("Monitoring GPU-Z logs for VRAM temperature...");
 
-            while (true) {
+            while (true)
+            {
                 try
                 {
                     double? latestTemp = GetLastestMemoryTemperature();
@@ -100,7 +125,8 @@ namespace MemTempTracker
                         Console.WriteLine("No valid temperature reading found.");
                     }
                 }
-                catch (Exception ex) {
+                catch (Exception ex)
+                {
                     Console.WriteLine($"Error: {ex.Message}");
                 }
                 Thread.Sleep(5000); // Check every 5 seconds
