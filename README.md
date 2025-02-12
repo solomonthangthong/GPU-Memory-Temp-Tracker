@@ -1,4 +1,4 @@
-# VRAM Temp Tracker for Salad | Auto Terminate & Email Alerts
+# VRAM Temp Tracker for Salad
 This console application monitors VRAM temperatures in real-time using GPU-Z logs and automatically shuts down [Salad](https://salad.com/) if the VRAM temperature exceeds 100°C, preventing overheating and potential hardware damage.
 
 **Why?**
